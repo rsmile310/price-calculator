@@ -45,6 +45,14 @@
     .custom-switch.custom-switch-sm .custom-control-input:checked~.custom-control-label::after {
       transform: translateX(calc(1rem - 0.25rem));
     }
+
+    .tax-options {
+      display: none;
+    }
+
+    .tax-options.active {
+      display: block;
+    }
   </style>
 </head>
 
@@ -101,7 +109,7 @@
         </div>
         <div class="form-group">
           <label for="tax-options">Options:</label>
-          <select class="form-control" id="tax-options">
+          <select class="form-control tax-options" id="tax-options">
             <option value="">Select an option...</option>
           </select>
         </div>
@@ -111,7 +119,6 @@
         <h2>Accounting</h2>
         <div id="account-options-box"></div>
       </div>
-      <button type="submit" class="btn btn-primary">Calculate</button>
     </form>
     <div>
       <h2>Total Price</h2>
@@ -160,40 +167,52 @@
           `)
         })
 
-        $('form').submit(function (event) {
-          event.preventDefault();
-          // Get values from the form
-          var employersStart = parseInt(data.Employers.Start);
-          var employersItems = parseInt($('#employers-no').val());
-          var employersSpecialProvision = $('#employers-special-provision').is(':checked');
-          var employersSpecialUnion = $('#employers-special-union').is(':checked');
-          var taxStart = $('#tax-start').is(':checked');
-          var taxOptions = $('#tax-options').val();
-          var accountingStart = parseInt(data.Accounting.Start);
-          var accountOptionValues = 0;
-
-          // Calculate the result
-          var result = employersStart * employersItems + (employersSpecialProvision ? data.Employers.Special.Provision : 0) + (employersSpecialUnion ? data.Employers.Special.Union : 0);
-
-          if (taxStart && taxOptions) {
-            result = result * parseInt(taxOptions) / 100;
-          }
-
-          accountOptions.map((item, i) => {
-            accountOptionValues += parseInt($("#accounting-options-"+ item.Name).val());
-          })
-
-          console.log(accountOptionValues)
-          result += accountingStart + accountOptionValues
-
-          // Display the result
-          $('#result').text(result+" $/month");
+        calculate(data, accountOptions)
+        $('input[type=range]').change(function () {
+          calculate(data, accountOptions)
+        });
+        $('input[type=checkbox]').change(function () {
+          calculate(data, accountOptions)
+        });
+        $('select').change(function () {
+          calculate(data, accountOptions)
         });
       });
 
       $("#employers-no").change(function () {
         $(this).closest("div").find(".range-num").text($(this).val())
       })
+
+      $('#tax-start').change(function () {
+        if ($(this).is(':checked')) {
+          $(".tax-options").addClass("active");
+        }
+        else
+          $(".tax-options").removeClass("active");
+      })
+      function calculate(data, accountOptions) {
+        // Get values from the form
+        let employersStart = parseInt(data.Employers.Start);
+        let employersItems = parseInt($('#employers-no').val());
+        let employersSpecialProvision = $('#employers-special-provision').is(':checked');
+        let employersSpecialUnion = $('#employers-special-union').is(':checked');
+        let taxStart = $('#tax-start').is(':checked');
+        let taxOptions = $('#tax-options').val();
+        let accountingStart = parseInt(data.Accounting.Start);
+        let accountOptionValues = 0;
+        let result = employersStart * employersItems + (employersSpecialProvision ? data.Employers.Special.Provision : 0) + (employersSpecialUnion ? data.Employers.Special.Union : 0);
+        if (taxStart && taxOptions) {
+          result = result * parseInt(taxOptions) / 100;
+        }
+        accountOptions.map((item, i) => {
+          accountOptionValues += parseInt($("#accounting-options-" + item.Name).val());
+        })
+        console.log(accountOptionValues)
+        result += accountingStart + accountOptionValues
+
+        // Display the result
+        $('#result').text(result + " $/month");
+      }
     });
   </script>
 </body>
