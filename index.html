@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Calculator</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- FontAwesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <style>
+    input {
+      box-shadow: none !important;
+    }
+
+    input[type=range] {
+      padding: 0;
+    }
+
+    select {
+      max-width: 400px;
+    }
+
+    label {
+      margin-right: 24px;
+    }
+
+    .custom-switch.custom-switch-sm .custom-control-label {
+      padding-left: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .custom-switch.custom-switch-sm .custom-control-label::before {
+      height: 1rem;
+      width: calc(1rem + 0.75rem);
+      border-radius: 2rem;
+    }
+
+    .custom-switch.custom-switch-sm .custom-control-label::after {
+      width: calc(1rem - 4px);
+      height: calc(1rem - 4px);
+      border-radius: calc(1rem - (1rem / 2));
+    }
+
+    .custom-switch.custom-switch-sm .custom-control-input:checked~.custom-control-label::after {
+      transform: translateX(calc(1rem - 0.25rem));
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container py-5">
+    <form class="mb-4">
+      <div class="mb-4">
+        <h2>Employers</h2>
+        <div class="row align-items-center mb-0">
+          <div class="col-5">
+            <label for="employers-no">No of Employers:</label>
+          </div>
+          <div class="col-7 d-flex align-items-center">
+            <input type="range" class="form-control mr-2" id="employers-no" min="0" max="100">
+            <span class="range-num"></span>
+          </div>
+        </div>
+        <div class="row align-items-center">
+          <div class="col-5">
+            <p class="mr-4 mb-0">Provision</p>
+          </div>
+          <div class="col-7">
+            <div class="custom-control custom-switch custom-switch-sm">
+              <input type="checkbox" class="custom-control-input" id="employers-special-provision">
+              <label class="custom-control-label" for="employers-special-provision"></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row align-items-center">
+          <div class="col-5">
+            <p class="mr-4 mb-0">Union</p>
+          </div>
+          <div class="col-7">
+            <div class="custom-control custom-switch custom-switch-sm">
+              <input type="checkbox" class="custom-control-input" id="employers-special-union">
+              <label class="custom-control-label" for="employers-special-union"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-4">
+        <h2>Tax</h2>
+        <div class="row align-items-center">
+          <div class="col-5">
+            <p class="mr-4 mb-0">Handling Tax-Start</p>
+          </div>
+          <div class="col-7">
+            <div class="custom-control custom-switch custom-switch-sm">
+              <input type="checkbox" class="custom-control-input" id="tax-start">
+              <label class="custom-control-label" for="tax-start"></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="tax-options">Options:</label>
+          <select class="form-control" id="tax-options">
+            <option value="">Select an option...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <h2>Accounting</h2>
+        <div id="account-options-box"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Calculate</button>
+    </form>
+    <div>
+      <h2>Total Price</h2>
+      <p id="result"></p>
+    </div>
+
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <!-- Script to calculate the result -->
+  <script>
+    $(document).ready(function () {
+      $.getJSON("data.json", function (data) {
+        var data = data.MyPrices;
+        $("#employers-no").val(data.Employers.Items);
+        $("#employers-no").closest("div").find("span").text(data.Employers.Items);
+
+        var accountOptions = data.Accounting.Options;
+        var taxOptions = data.Tax.Options;
+
+        accountOptions.map((item, i) => {
+          $("#account-options-box").append(`
+            <div class="row">
+              <div class="col-5">
+                <label for="accounting-options-`+ item.Name + `">` + item.Name + `:</label>
+              </div>
+              <div class="col-7 d-flex align-items-center">
+                <input type="range" class="form-control mr-2" id="accounting-options-`+ item.Name + `" value="` + item.Value + `">
+                <span class="range-num">`+ item.Value + `</span>
+              </div>
+            </div>`
+          )
+
+          $("#accounting-options-" + item.Name).change(function () {
+            $(this).closest("div").find(".range-num").text($(this).val())
+          })
+        })
+
+        taxOptions.map((item, i) => {
+          $("#tax-options").append(`
+            <option value="`+ item.Value + `">` + item.Name + `</option>
+          `)
+        })
+
+        $('form').submit(function (event) {
+          event.preventDefault();
+          // Get values from the form
+          var employersStart = parseInt(data.Employers.Start);
+          var employersItems = parseInt($('#employers-no').val());
+          var employersSpecialProvision = $('#employers-special-provision').is(':checked');
+          var employersSpecialUnion = $('#employers-special-union').is(':checked');
+          var taxStart = $('#tax-start').is(':checked');
+          var taxOptions = $('#tax-options').val();
+          var accountingStart = parseInt(data.Accounting.Start);
+          var accountOptionValues = 0;
+
+          // Calculate the result
+          var result = employersStart * employersItems + (employersSpecialProvision ? data.Employers.Special.Provision : 0) + (employersSpecialUnion ? data.Employers.Special.Union : 0);
+
+          if (taxStart && taxOptions) {
+            result = result * parseInt(taxOptions) / 100;
+          }
+
+          accountOptions.map((item, i) => {
+            accountOptionValues += parseInt($("#accounting-options-"+ item.Name).val());
+          })
+
+          console.log(accountOptionValues)
+          result += accountingStart + accountOptionValues
+
+          // Display the result
+          $('#result').text(result+" $/month");
+        });
+      });
+
+      $("#employers-no").change(function () {
+        $(this).closest("div").find(".range-num").text($(this).val())
+      })
+    });
+  </script>
+</body>
+
+</html>

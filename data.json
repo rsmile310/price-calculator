@@ -1,0 +1,50 @@
+{
+    "MyPrices": {
+        "Employers": {
+            "Start": 100,
+            "Items": 10,
+            "Special": {
+                "Provision": 100,
+                "Union": 50
+            }
+        },
+        "Tax": {
+            "Start": 300,
+            "Options": [
+                {
+                    "Name": "Incorporate",
+                    "Value": "100%"
+                },
+                {
+                    "Name": "Private",
+                    "Value": "150%"
+                },
+                {
+                    "Name": "Public",
+                    "Value": "150%"
+                }
+            ]
+        },
+        "Accounting": {
+            "Start": 400,
+            "Options": [
+                {
+                    "Name": "Invoices",
+                    "Value": "10"
+                },
+                {
+                    "Name": "Reciepe",
+                    "Value": "15"
+                },
+                {
+                    "Name": "SupplierInvoice",
+                    "Value": "15"
+                },
+                {
+                    "Name": "SupInvoice",
+                    "Value": "23"
+                }
+            ]
+        }
+    }
+}
