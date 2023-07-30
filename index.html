@@ -135,6 +135,8 @@
   <!-- Script to calculate the result -->
   <script>
     $(document).ready(function () {
+      var priceArray = [];
+
       $.getJSON("data.json", function (data) {
         var data = data.MyPrices;
         $("#employers-no").val(data.Employers.Items);
@@ -163,7 +165,7 @@
 
         taxOptions.map((item, i) => {
           $("#tax-options").append(`
-            <option value="`+ item.Value + `">` + item.Name + `</option>
+            <option value="`+ item.Value + `" forId="sdf">` + item.Name + `</option>
           `)
         })
 
@@ -191,6 +193,7 @@
           $(".tax-options").removeClass("active");
       })
       function calculate(data, accountOptions) {
+        priceArray = []
         // Get values from the form
         let employersStart = parseInt(data.Employers.Start);
         let employersItems = parseInt($('#employers-no').val());
@@ -200,20 +203,55 @@
         let taxOptions = $('#tax-options').val();
         let accountingStart = parseInt(data.Accounting.Start);
         let accountOptionValues = 0;
-        let result = employersStart * employersItems + (employersSpecialProvision ? data.Employers.Special.Provision : 0) + (employersSpecialUnion ? data.Employers.Special.Union : 0);
-        if (taxStart && taxOptions) {
-          result = result * parseInt(taxOptions) / 100;
+        let sum = 0;
+
+        priceArray.push({ key: "Employers_Items", value: employersItems * data.Employers.Start })
+        if (employersSpecialProvision) {
+          priceArray.push({ key: "Employers_Special_Provision", value: data.Employers.Special.Provision })
         }
+        if (employersSpecialUnion) {
+          priceArray.push({ key: "Employers_Special_Union", value: data.Employers.Special.Union })
+        }
+        if (taxStart && taxOptions) {
+          priceArray.push({ key: "Tax_Option", value: data.Tax.Start * parseInt(taxOptions) / 100 })
+        }
+
+        priceArray.push({ key: "Accounting_Start", value: data.Accounting.Start })
+
         accountOptions.map((item, i) => {
-          accountOptionValues += parseInt($("#accounting-options-" + item.Name).val());
+          priceArray.push({ key: "Accounting_Options_" + item.Name, value: item.Value })
         })
-        console.log(accountOptionValues)
-        result += accountingStart + accountOptionValues
+
+        console.log(priceArray)
+
+        priceArray.map((item, i) => {
+          sum += parseInt(item.value);
+        })
 
         // Display the result
-        $('#result').text(result + " $/month");
+        $('#result').text(sum + " $/month");
       }
     });
+        // priceArray.push({ key: "Employers_Start", value: data.Employers.Start })
+        // priceArray.push({ key: "Employers_Items", value: employersItems })
+        // if (employersSpecialProvision) {
+        //   priceArray.push({ key: "Employers_Special_Provision", value: data.Employers.Special.Provision })
+        // }
+        // if (employersSpecialUnion) {
+        //   priceArray.push({ key: "Employers_Special_Union", value: data.Employers.Special.Union })
+        // }
+        // if (taxStart && taxOptions) {
+        //   priceArray.push({ key: "Tax_Start", value: data.Tax.Start })
+        //   priceArray.push({ key: "Tax_Option_" + $("#tax-options").find(":selected").text(), value: taxOptions })
+        // }
+
+        // priceArray.push({ key: "Accounting_Start", value: data.Accounting.Start })
+
+        // accountOptions.map((item, i) => {
+        //   priceArray.push({ key: "Accounting_Options_"+item.Name, value: item.Value })
+        // })
+
+        // priceArray.push({ key: "Employers_Start", value: data.Employers.Start })
   </script>
 </body>
 
